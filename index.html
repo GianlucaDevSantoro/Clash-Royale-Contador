@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contador de Enfrentamientos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ==== Estilos igual que tu código original ==== */
+body { font-family: "Cinzel", serif; margin: 0; background: linear-gradient(90deg, #1e3a8a 50%, #b91c1c 50%); color: white; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
+h1 { text-align: center; font-size: 2.5em; margin-bottom: 30px; display: flex; align-items: center; justify-content: center; gap: 20px; }
+h1, h2, .score { text-shadow: 1px 1px 3px black; }
+#new-match { margin-bottom: 25px; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+.input-container { display: flex; gap: 20px; }
+input[type="text"] { background-color: rgba(0, 0, 0, 0.3); color: white; border: 2px solid transparent; padding: 8px 12px; border-radius: 6px; font-size: 1em; width: 200px; transition: border-color 0.3s, box-shadow 0.3s; text-align: center; }
+#teamA { border-color: #b91c1c; }
+#teamB { border-color: #1e3a8a; }
+#new-match:focus-within #teamA:not(:focus) { border-color: rgba(185, 28, 28, 0.5); }
+#new-match:focus-within #teamB:not(:focus) { border-color: rgba(30, 58, 138, 0.5); }
+#teamA:focus { box-shadow: 0 0 8px #ef4444; }
+#teamB:focus { box-shadow: 0 0 8px #3b82f6; }
+input::placeholder { color: rgba(255, 255, 255, 0.6); }
+input:focus { outline: none; border-color: #facc15; }
+button { background-color: white; color: #333; border: none; border-radius: 6px; cursor: pointer; font-family: "Cinzel", serif; font-weight: bold; font-size: 1em; padding: 10px 18px; transition: transform 0.2s, background-color 0.3s, box-shadow 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+button:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+button:active { transform: scale(0.95); }
+#matches { display: flex; flex-direction: column; gap: 20px; width: 90%; max-width: 700px; }
+.match { display: flex; justify-content: space-between; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.2); position: relative; overflow: hidden; }
+.team { width: 45%; text-align: center; padding: 15px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
+.team-controls { display: flex; flex-direction: column; align-items: center; }
+.team h2 { margin: 0; font-size: 1.5em; display: flex; }
+.score { font-size: 2em; margin: 10px 0; }
+.team-blue { background-color: #1e3a8a; }
+.team-red { background-color: #b91c1c; }
+.button-group { display: flex; gap: 10px; }
+.button-group button { width: 35px; height: 35px; font-size: 1.5em; padding: 0; line-height: 35px; }
+.btn-blue { background-color: white; color: #2563eb; border: 2px solid #2563eb; }
+.btn-blue:hover { background-color: #2563eb; color: white; }
+.btn-red { background-color: white; color: #dc2626; border: 2px solid #dc2626; }
+.btn-red:hover { background-color: #dc2626; color: white; }
+.vs { font-size: 1.8em; margin: auto; }
+.crown-icon { width: 28px; height: auto; margin-left: 10px; vertical-align: middle; }
+h1 .crown-icon { width: 65px; margin: 0; }
+.delete-btn { position: absolute; top: 5px; right: 5px; width: 26px; height: 26px; background: white; border: none; color: #b91c1c; border-radius: 50%; font-size: 1.2em; line-height: 27px; text-align: center; padding: 0; font-weight: bold; }
+.delete-btn:hover { background-color: #b91c1c; color: white; }
+</style>
+</head>
+<body>
+<h1>
+<img src="https://store.supercell.com/_next/static/media/crown.4ca15365.png" class="crown-icon">
+Contador de Enfrentamientos
+<img src="https://event.supercell.com/clashroyale/images/landing/crown.png" class="crown-icon">
+</h1>
+
+<div id="new-match">
+    <div class="input-container">
+        <input type="text" id="teamA" placeholder="Equipo Rojo">
+        <input type="text" id="teamB" placeholder="Equipo Azul">
+    </div>
+    <button onclick="agregarEnfrentamiento()">Agregar</button>
+</div>
+
+<div id="matches"></div>
+
+<script>
+const matchesDiv = document.getElementById("matches");
+let matchesData = [];
+
+const BIN_ID = '68f57ec4ae596e708f1de48d';
+const API_KEY = '$2a$10$b9vEo4LCk2ukeu4n0mliQuoBlRr594bbavtOwCvDw5GFjtkh0hyBi';
+const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
+async function cargarDatos() {
+    try {
+        const res = await fetch(`${API_URL}/latest`, {
+            headers: { 'X-Master-Key': API_KEY }
+        });
+        if (!res.ok) throw new Error(`Error al cargar: ${res.statusText}`);
+        const data = await res.json();
+        matchesData = data.record.matches || [];
+        renderMatches();
+    } catch (error) {
+        console.error("No se pudieron cargar los datos. Puede que el bin esté vacío.", error);
+        matchesData = [];
+    }
+}
+
+async function guardarDatos() {
+    try {
+        await fetch(API_URL, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Master-Key': API_KEY
+            },
+            body: JSON.stringify({ matches: matchesData })
+        });
+    } catch (error) {
+        console.error("Error al guardar los datos:", error);
+    }
+}
+
+function renderMatches() {
+    matchesDiv.innerHTML = "";
+    matchesData.forEach(match => {
+        const div = document.createElement("div");
+        div.className = "match";
+
+        let crownA = '';
+        let crownB = '';
+        if (match.scoreA > match.scoreB) {
+            crownA = `<img src="https://store.supercell.com/_next/static/media/crown.4ca15365.png" class="crown-icon" alt="corona ganadora">`;
+        } else if (match.scoreB > match.scoreA) {
+            crownB = `<img src="https://event.supercell.com/clashroyale/images/landing/crown.png" class="crown-icon" alt="corona ganadora">`;
+        }
+
+        div.innerHTML = `
+            <div class="team team-red">
+                <h2>${match.teamA} ${crownA}</h2>
+                <div class="score" id="scoreA-${match.id}">${match.scoreA}</div>
+                <div class="button-group">
+                    <button class="btn-red" onclick="cambiar(${match.id}, 'scoreA', -1)">-</button>
+                    <button class="btn-red" onclick="cambiar(${match.id}, 'scoreA', 1)">+</button>
+                </div>
+            </div>
+            <div class="vs">VS</div>
+            <div class="team team-blue">
+                <h2>${match.teamB} ${crownB}</h2>
+                <div class="score" id="scoreB-${match.id}">${match.scoreB}</div>
+                <div class="button-group">
+                    <button class="btn-blue" onclick="cambiar(${match.id}, 'scoreB', -1)">-</button>
+                    <button class="btn-blue" onclick="cambiar(${match.id}, 'scoreB', 1)">+</button>
+                </div>
+            </div>
+            <button class="delete-btn" onclick="eliminarEnfrentamiento(${match.id})">&times;</button>
+        `;
+        matchesDiv.appendChild(div);
+    });
+}
+
+function escapeHtml(text) {
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+window.agregarEnfrentamiento = function() {
+    const teamA = escapeHtml(document.getElementById("teamA").value.trim());
+    const teamB = escapeHtml(document.getElementById("teamB").value.trim());
+    if (!teamA || !teamB) return alert("Debes poner los dos nombres.");
+
+    const newMatch = { id: Date.now(), teamA, teamB, scoreA: 0, scoreB: 0 };
+    matchesData.push(newMatch);
+    document.getElementById("teamA").value = "";
+    document.getElementById("teamB").value = "";
+    renderMatches();
+    guardarDatos();
+};
+
+window.cambiar = function(id, campo, valor) {
+    const match = matchesData.find(m => m.id === id);
+    if (match) {
+        const nuevoValor = match[campo] + valor;
+        if (nuevoValor >= 0) match[campo] = nuevoValor;
+        renderMatches();
+        guardarDatos();
+    }
+};
+
+window.eliminarEnfrentamiento = function(id) {
+    matchesData = matchesData.filter(m => m.id !== id);
+    renderMatches();
+    guardarDatos();
+};
+
+// Cargar los datos al iniciar la página
+cargarDatos();
+
+</script>
+</body>
+</html>
