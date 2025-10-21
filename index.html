@@ -8,7 +8,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
 <style>
-/* ==== Estilos igual que tu código original ==== */
 body { font-family: "Cinzel", serif; margin: 0; background: linear-gradient(90deg, #1e3a8a 50%, #b91c1c 50%); color: white; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
 h1 { text-align: center; font-size: 2.5em; margin-bottom: 30px; display: flex; align-items: center; justify-content: center; gap: 20px; }
 h1, h2, .score { text-shadow: 1px 1px 3px black; }
@@ -46,12 +45,37 @@ h1 .crown-icon { width: 65px; margin: 0; }
 .delete-btn { position: absolute; top: 5px; right: 5px; width: 26px; height: 26px; background: white; border: none; color: #b91c1c; border-radius: 50%; font-size: 1.2em; line-height: 27px; text-align: center; padding: 0; font-weight: bold; }
 .delete-btn:hover { background-color: #b91c1c; color: white; }
 </style>
+<style>
+    #tabla-ganadores { 
+        position: absolute;
+        top: 50px;
+        left: 50px;
+        background-color: rgba(0, 0, 0, 0.4); 
+        color: white;
+        padding: 15px; 
+        border-radius: 12px; 
+        width: 320px; 
+        text-align: center; 
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    #tabla-ganadores h2 { 
+        margin-top: 0; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+        text-shadow: 1px 1px 3px black;
+    }
+    #tabla-ganadores table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    #tabla-ganadores th, #tabla-ganadores td { padding: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.2); text-align: left; }
+    #tabla-ganadores th { font-size: 1.2em; }
+</style>
 </head>
 <body>
+<div id="tabla-ganadores"></div>
 <h1>
-<img src="https://store.supercell.com/_next/static/media/crown.4ca15365.png" class="crown-icon">
-Contador de Enfrentamientos
 <img src="https://event.supercell.com/clashroyale/images/landing/crown.png" class="crown-icon">
+Contador de Enfrentamientos
+<img src="https://store.supercell.com/_next/static/media/crown.4ca15365.png" class="crown-icon">
 </h1>
 
 <div id="new-match">
@@ -64,9 +88,15 @@ Contador de Enfrentamientos
 
 <div id="matches"></div>
 
+<div style="display: flex; justify-content: center; gap: 20px; margin-top: 50px; margin-bottom: 20px;">
+    <img src="https://media.tenor.com/1ezbzmllwqkAAAAM/clash-royale-funny.gif" alt="Clash Royale Emote" style="width: 250px; border-radius: 10px;">
+    <img src="https://media.tenor.com/29RZgiyx0fsAAAAj/clash-royale-boohoo.gif" alt="Clash Royale Emote" style="width: 250px; border-radius: 10px;">
+</div>
+
 <script>
 const matchesDiv = document.getElementById("matches");
 let matchesData = [];
+let scoresData = {};
 
 const BIN_ID = '68f57ec4ae596e708f1de48d';
 const API_KEY = '$2a$10$b9vEo4LCk2ukeu4n0mliQuoBlRr594bbavtOwCvDw5GFjtkh0hyBi';
@@ -79,11 +109,14 @@ async function cargarDatos() {
         });
         if (!res.ok) throw new Error(`Error al cargar: ${res.statusText}`);
         const data = await res.json();
+        // Cargamos tanto los enfrentamientos como las puntuaciones
         matchesData = data.record.matches || [];
+        scoresData = data.record.scores || {};
         renderMatches();
     } catch (error) {
-        console.error("No se pudieron cargar los datos. Puede que el bin esté vacío.", error);
+        // Si falla, inicializamos con valores por defecto
         matchesData = [];
+        scoresData = {};
     }
 }
 
@@ -95,7 +128,7 @@ async function guardarDatos() {
                 'Content-Type': 'application/json',
                 'X-Master-Key': API_KEY
             },
-            body: JSON.stringify({ matches: matchesData })
+            body: JSON.stringify({ matches: matchesData, scores: scoresData })
         });
     } catch (error) {
         console.error("Error al guardar los datos:", error);
@@ -113,7 +146,7 @@ function renderMatches() {
         if (match.scoreA > match.scoreB) {
             crownA = `<img src="https://store.supercell.com/_next/static/media/crown.4ca15365.png" class="crown-icon" alt="corona ganadora">`;
         } else if (match.scoreB > match.scoreA) {
-            crownB = `<img src="https://event.supercell.com/clashroyale/images/landing/crown.png" class="crown-icon" alt="corona ganadora">`;
+            crownB = `<img src="https://store.supercell.com/_next/static/media/crown.4ca15365.png" class="crown-icon" alt="corona ganadora">`;
         }
 
         div.innerHTML = `
@@ -138,6 +171,57 @@ function renderMatches() {
         `;
         matchesDiv.appendChild(div);
     });
+    renderLeaderboard();
+}
+
+function recalculateScores() {
+    const scores = {};
+    matchesData.forEach(match => {
+        // Acumulamos los puntos para cada jugador en todas las partidas
+        scores[match.teamA] = (scores[match.teamA] || 0) + match.scoreA;
+        scores[match.teamB] = (scores[match.teamB] || 0) + match.scoreB;
+    });
+    // Actualizamos el objeto global de puntuaciones
+    scoresData = scores;
+}
+
+function renderLeaderboard() {
+    const leaderboardDiv = document.getElementById("tabla-ganadores");
+
+    // Ordenamos los jugadores por puntuación de mayor a menor
+    const sortedPlayers = Object.entries(scoresData)
+        .map(([player, points]) => ({ player, points }))
+        .sort((a, b) => b.points - a.points);
+
+    // Renderizamos la tabla
+    let content = `
+        <h2>
+            <img src="https://media.tenor.com/oCQYaLar7_MAAAAM/fortnite-clash.gif" alt="trophy gif" style="width:50px; height:50px; margin-right: 10px;">
+            Tabla de Puntos
+        </h2>
+    `;
+    if (sortedPlayers.length === 0) {
+        content += '<p>Aún no hay puntos</p>';
+    } else {
+        content += `
+            <table>
+                <thead><tr><th>#</th><th>Jugador</th><th>Puntos</th></tr></thead>
+                <tbody>
+                    ${sortedPlayers.map((player, index) => {
+                        const topOneIcon = index === 0 
+                            ? `<img src="https://support.supercell.com/images/icon_CR_Parents_v1.png?v=1669362318" alt="Top 1" style="width: 24px; height: 24px; vertical-align: middle; margin-left: 5px;">` 
+                            : '';
+                        return `<tr>
+                                    <td>${index + 1}</td>
+                                    <td>${escapeHtml(player.player)}${topOneIcon}</td>
+                                    <td>${player.points}</td>
+                                </tr>`;
+                    }).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+    leaderboardDiv.innerHTML = content;
 }
 
 function escapeHtml(text) {
@@ -146,14 +230,19 @@ function escapeHtml(text) {
 }
 
 window.agregarEnfrentamiento = function() {
-    const teamA = escapeHtml(document.getElementById("teamA").value.trim());
-    const teamB = escapeHtml(document.getElementById("teamB").value.trim());
+    // Normalizamos los nombres: quitamos espacios y convertimos a minúsculas para el conteo.
+    // Luego, ponemos la primera letra en mayúscula para mostrarlo de forma consistente.
+    const normalize = (name) => name.trim().toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
+
+    const teamA = escapeHtml(normalize(document.getElementById("teamA").value));
+    const teamB = escapeHtml(normalize(document.getElementById("teamB").value));
     if (!teamA || !teamB) return alert("Debes poner los dos nombres.");
 
     const newMatch = { id: Date.now(), teamA, teamB, scoreA: 0, scoreB: 0 };
     matchesData.push(newMatch);
     document.getElementById("teamA").value = "";
     document.getElementById("teamB").value = "";
+    // No es necesario recalcular aquí porque un nuevo match no tiene ganador
     renderMatches();
     guardarDatos();
 };
@@ -163,6 +252,7 @@ window.cambiar = function(id, campo, valor) {
     if (match) {
         const nuevoValor = match[campo] + valor;
         if (nuevoValor >= 0) match[campo] = nuevoValor;
+        recalculateScores(); // Recalculamos las puntuaciones
         renderMatches();
         guardarDatos();
     }
@@ -170,11 +260,11 @@ window.cambiar = function(id, campo, valor) {
 
 window.eliminarEnfrentamiento = function(id) {
     matchesData = matchesData.filter(m => m.id !== id);
+    recalculateScores(); // Recalculamos las puntuaciones
     renderMatches();
     guardarDatos();
 };
 
-// Cargar los datos al iniciar la página
 cargarDatos();
 
 </script>
