@@ -1,31 +1,39 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8"> 
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Contador de Enfrentamientos</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
 <style>
-body { font-family: "Cinzel", serif; margin: 0; background: linear-gradient(90deg, #1e3a8a 50%, #b91c1c 50%); color: white; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
-h1 { text-align: center; font-size: 2.5em; margin-bottom: 30px; display: flex; align-items: center; justify-content: center; gap: 20px; }
+body { font-family: "Cinzel", serif; margin: 0; background: linear-gradient(90deg, #1e3a8a 50%, #b91c1c 50%); color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; box-sizing: border-box; }
+h1 { text-align: center; font-size: 2.5em; margin-bottom: 30px; display: flex; align-items: center; justify-content: center; gap: 20px; margin-top: 0; }
 h1, h2, .score { text-shadow: 1px 1px 3px black; }
 #new-match { margin-bottom: 25px; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+.new-match-mc { margin-bottom: 25px; display: flex; flex-direction: column; align-items: center; gap: 15px; }
 .input-container { display: flex; gap: 20px; }
 input[type="text"] { background-color: rgba(0, 0, 0, 0.3); color: white; border: 2px solid transparent; padding: 8px 12px; border-radius: 6px; font-size: 1em; width: 200px; transition: border-color 0.3s, box-shadow 0.3s; text-align: center; }
 #teamA { border-color: #b91c1c; }
 #teamB { border-color: #1e3a8a; }
+#mc-teamA { border-color: #16a34a; }
+#mc-teamB { border-color: #a16207; }
 #new-match:focus-within #teamA:not(:focus) { border-color: rgba(185, 28, 28, 0.5); }
 #new-match:focus-within #teamB:not(:focus) { border-color: rgba(30, 58, 138, 0.5); }
+.new-match-mc:focus-within #mc-teamA:not(:focus) { border-color: rgba(161, 98, 7, 0.5); }
+.new-match-mc:focus-within #mc-teamB:not(:focus) { border-color: rgba(22, 163, 74, 0.5); }
 #teamA:focus { box-shadow: 0 0 8px #ef4444; }
 #teamB:focus { box-shadow: 0 0 8px #3b82f6; }
+#mc-teamA:focus { box-shadow: 0 0 8px #facc15; }
+#mc-teamB:focus { box-shadow: 0 0 8px #4ade80; }
 input::placeholder { color: rgba(255, 255, 255, 0.6); }
 input:focus { outline: none; border-color: #facc15; }
 button { background-color: white; color: #333; border: none; border-radius: 6px; cursor: pointer; font-family: "Cinzel", serif; font-weight: bold; font-size: 1em; padding: 10px 18px; transition: transform 0.2s, background-color 0.3s, box-shadow 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
 button:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
 button:active { transform: scale(0.95); }
 #matches { display: flex; flex-direction: column; gap: 20px; width: 90%; max-width: 700px; }
+#mc-matches { display: flex; flex-direction: column; gap: 20px; width: 90%; max-width: 700px; }
 .match { display: flex; justify-content: space-between; border-radius: 12px; box-shadow: 0 0 10px rgba(0,0,0,0.2); position: relative; overflow: hidden; }
 .team { width: 45%; text-align: center; padding: 15px; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
 .team-controls { display: flex; flex-direction: column; align-items: center; }
@@ -39,6 +47,10 @@ button:active { transform: scale(0.95); }
 .btn-blue:hover { background-color: #2563eb; color: white; }
 .btn-red { background-color: white; color: #dc2626; border: 2px solid #dc2626; }
 .btn-red:hover { background-color: #dc2626; color: white; }
+.btn-green { background-color: white; color: #16a34a; border: 2px solid #16a34a; }
+.btn-green:hover { background-color: #16a34a; color: white; }
+.btn-brown { background-color: white; color: #a16207; border: 2px solid #a16207; }
+.btn-brown:hover { background-color: #a16207; color: white; }
 .vs { font-size: 1.8em; margin: auto; }
 .crown-icon { width: 28px; height: auto; margin-left: 10px; vertical-align: middle; }
 h1 .crown-icon { width: 65px; margin: 0; }
@@ -46,10 +58,10 @@ h1 .crown-icon { width: 65px; margin: 0; }
 .delete-btn:hover { background-color: #b91c1c; color: white; }
 </style>
 <style>
-    #tabla-ganadores { 
+    .leaderboard { 
         position: absolute;
-        top: 50px;
-        left: 50px;
+        top: 70px;
+        left: 20px;
         background-color: rgba(0, 0, 0, 0.4); 
         color: white;
         padding: 15px; 
@@ -58,75 +70,167 @@ h1 .crown-icon { width: 65px; margin: 0; }
         text-align: center; 
         box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
-    #tabla-ganadores h2 { 
+    .leaderboard h2 { 
         margin-top: 0; 
         display: flex; 
         align-items: center; 
         justify-content: center;
         text-shadow: 1px 1px 3px black;
     }
-    #tabla-ganadores table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-    #tabla-ganadores th, #tabla-ganadores td { padding: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.2); text-align: left; }
-    #tabla-ganadores th { font-size: 1.2em; }
+    .leaderboard table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    .leaderboard th, .leaderboard td { padding: 8px; border-bottom: 1px solid rgba(255, 255, 255, 0.2); text-align: left; }
+    .leaderboard th { font-size: 1.2em; }
+
+    #game-selector {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        display: flex;
+        gap: 10px;
+    }
+    #game-selector button {
+        font-size: 0.9em;
+        padding: 8px 15px;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        background: white;
+        color: #333;
+    }
+    #show-clash.active, #show-clash:not(.active):hover {
+        background: linear-gradient(90deg, #3b82f6 50%, #ef4444 50%);
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 0 8px #ef4444;
+    }
+    #show-minecraft.active, #show-minecraft:not(.active):hover {
+        background: linear-gradient(90deg, #16a34a 50%, #a16207 50%);
+        color: white;
+        border-color: transparent;
+        box-shadow: 0 0 8px #a16207;
+    }
+    /* Keep inactive buttons white */
+    #show-clash:not(.active), #show-minecraft:not(.active) {
+        background: white;
+        color: #333;
+    }
+    .game-container {
+        /* This container now only holds the main content, which is centered by the body */
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
 </style>
 </head>
 <body>
-<div id="tabla-ganadores"></div>
-<h1>
-<img src="https://event.supercell.com/clashroyale/images/landing/crown.png" class="crown-icon">
-Contador de Enfrentamientos
-<img src="https://store.supercell.com/_next/static/media/crown.4ca15365.png" class="crown-icon">
-</h1>
 
-<div id="new-match">
-    <div class="input-container">
-        <input type="text" id="teamA" placeholder="Equipo Rojo">
-        <input type="text" id="teamB" placeholder="Equipo Azul">
+<div id="game-selector">
+    <button id="show-clash" onclick="switchGame('clash')">Clash Royale</button>
+    <button id="show-minecraft" onclick="switchGame('minecraft')">Minecraft</button>
+</div>
+
+<div id="tabla-ganadores" class="leaderboard"></div>
+<div id="mc-tabla-ganadores" class="leaderboard" style="display: none;"></div>
+
+<div id="clash-royale-section" class="game-container">    
+    <h1>
+        <img src="https://event.supercell.com/clashroyale/images/landing/crown.png" class="crown-icon">
+        Contador de Enfrentamientos
+        <img src="https://store.supercell.com/_next/static/media/crown.4ca15365.png" class="crown-icon">
+    </h1>
+
+    <div id="new-match">
+        <div class="input-container">
+            <input type="text" id="teamA" placeholder="Equipo Rojo">
+            <input type="text" id="teamB" placeholder="Equipo Azul">
+        </div>
+        <button onclick="agregarEnfrentamiento()">Agregar</button>
     </div>
-    <button onclick="agregarEnfrentamiento()">Agregar</button>
+
+    <div id="matches"></div>
 </div>
 
-<div id="matches"></div>
+<div id="minecraft-section" class="game-container" style="display: none;">
+    <h1>
+        <img src="https://p.novaskin.me/5214253123.png" class="crown-icon" style="image-rendering: pixelated; width: 55px;">
+        Contador de Victorias
+        <img src="https://png.pngtree.com/png-vector/20250515/ourmid/pngtree-retro-8-bit-crown-icon-with-transparent-background-vector-png-image_16290497.png" class="crown-icon" style="image-rendering: pixelated; width: 55px;">
+    </h1>
 
-<div style="display: flex; justify-content: center; gap: 20px; margin-top: 50px; margin-bottom: 20px;">
+    <div class="new-match-mc">
+        <div class="input-container">
+            <input type="text" id="mc-teamA" placeholder="Equipo Marrón">
+            <input type="text" id="mc-teamB" placeholder="Equipo Verde">
+        </div>
+        <button onclick="agregarEnfrentamiento()">Agregar</button>
+    </div>
+
+    <div id="mc-matches"></div>
 </div>
+
 
 <script>
-const matchesDiv = document.getElementById("matches");
-let matchesData = [];
-let scoresData = {};
-
-const BIN_ID = '68f57ec4ae596e708f1de48d';
 const API_KEY = '$2a$10$b9vEo4LCk2ukeu4n0mliQuoBlRr594bbavtOwCvDw5GFjtkh0hyBi';
-const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
+const gameStates = {
+    clash: {
+        binId: '68f57ec4ae596e708f1de48d',
+        matchesData: [],
+        scoresData: {},
+        elements: {
+            section: document.getElementById('clash-royale-section'),
+            matchesDiv: document.getElementById('matches'),
+            leaderboardDiv: document.getElementById('tabla-ganadores'),
+            teamAInput: document.getElementById('teamA'),
+            teamBInput: document.getElementById('teamB'),
+        }
+    },
+    minecraft: {
+        binId: '6905561943b1c97be98f9758',
+        matchesData: [],
+        scoresData: {},
+        elements: {
+            section: document.getElementById('minecraft-section'),
+            matchesDiv: document.getElementById('mc-matches'),
+            leaderboardDiv: document.getElementById('mc-tabla-ganadores'),
+            teamAInput: document.getElementById('mc-teamA'),
+            teamBInput: document.getElementById('mc-teamB'),
+        }
+    }
+};
+
+let currentGame = 'clash';
 
 async function cargarDatos() {
+    const state = gameStates[currentGame];
+    const apiUrl = `https://api.jsonbin.io/v3/b/${state.binId}`;
     try {
-        const res = await fetch(`${API_URL}/latest`, {
+        const res = await fetch(`${apiUrl}/latest`, {
             headers: { 'X-Master-Key': API_KEY }
         });
         if (!res.ok) throw new Error(`Error al cargar: ${res.statusText}`);
         const data = await res.json();
-        // Cargamos tanto los enfrentamientos como las puntuaciones
-        matchesData = data.record.matches || [];
-        scoresData = data.record.scores || {};
+        state.matchesData = data.record.matches || [];
+        state.scoresData = data.record.scores || {};
         renderMatches();
     } catch (error) {
-        // Si falla, inicializamos con valores por defecto
-        matchesData = [];
-        scoresData = {};
+        console.warn(`No se pudieron cargar datos para ${currentGame}, iniciando con valores por defecto.`, error);
+        state.matchesData = [];
+        state.scoresData = {};
     }
 }
 
 async function guardarDatos() {
+    const state = gameStates[currentGame];
+    const apiUrl = `https://api.jsonbin.io/v3/b/${state.binId}`;
     try {
-        await fetch(API_URL, {
+        await fetch(apiUrl, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Master-Key': API_KEY
             },
-            body: JSON.stringify({ matches: matchesData, scores: scoresData })
+            body: JSON.stringify({ matches: state.matchesData, scores: state.scoresData })
         });
     } catch (error) {
         console.error("Error al guardar los datos:", error);
@@ -134,67 +238,79 @@ async function guardarDatos() {
 }
 
 function renderMatches() {
-    matchesDiv.innerHTML = "";
-    matchesData.forEach(match => {
+    const state = gameStates[currentGame];
+    state.elements.matchesDiv.innerHTML = "";
+    state.matchesData.forEach(match => {
         const div = document.createElement("div");
         div.className = "match";
 
         let crownA = '';
         let crownB = '';
-        if (match.scoreA > match.scoreB) {
-            crownA = `<img src="https://store.supercell.com/_next/static/media/crown.4ca15365.png" class="crown-icon" alt="corona ganadora">`;
-        } else if (match.scoreB > match.scoreA) {
-            crownB = `<img src="https://store.supercell.com/_next/static/media/crown.4ca15365.png" class="crown-icon" alt="corona ganadora">`;
+        if (currentGame === 'clash') {
+            if (match.scoreA > match.scoreB) {
+                crownA = `<img src="https://store.supercell.com/_next/static/media/crown.4ca15365.png" class="crown-icon" alt="corona ganadora">`;
+            } else if (match.scoreB > match.scoreA) {
+                crownB = `<img src="https://store.supercell.com/_next/static/media/crown.4ca15365.png" class="crown-icon" alt="corona ganadora">`;
+            }
+        } else { // Minecraft icons
+             if (match.scoreA > match.scoreB) {
+                crownA = `<img src="https://png.pngtree.com/png-vector/20250515/ourmid/pngtree-retro-8-bit-crown-icon-with-transparent-background-vector-png-image_16290497.png" class="crown-icon" style="image-rendering: pixelated;" alt="corona ganadora">`;
+            } else if (match.scoreB > match.scoreA) {
+                crownB = `<img src="https://png.pngtree.com/png-vector/20250515/ourmid/pngtree-retro-8-bit-crown-icon-with-transparent-background-vector-png-image_16290497.png" class="crown-icon" style="image-rendering: pixelated;" alt="corona ganadora">`;
+            }
         }
 
+        const isClash = currentGame === 'clash';
+
         div.innerHTML = `
-            <div class="team team-red">
+            <div class="team ${isClash ? 'team-red' : ''}" style="${!isClash ? 'background-color: #a16207;' : ''}">
                 <h2>${match.teamA} ${crownA}</h2>
                 <div class="score" id="scoreA-${match.id}">${match.scoreA}</div>
                 <div class="button-group">
-                    <button class="btn-red" onclick="cambiar(${match.id}, 'scoreA', -1)">-</button>
-                    <button class="btn-red" onclick="cambiar(${match.id}, 'scoreA', 1)">+</button>
+                    <button class="${isClash ? 'btn-red' : 'btn-brown'}" onclick="cambiar(${match.id}, 'scoreA', -1)">-</button>
+                    <button class="${isClash ? 'btn-red' : 'btn-brown'}" onclick="cambiar(${match.id}, 'scoreA', 1)">+</button>
                 </div>
             </div>
             <div class="vs">VS</div>
-            <div class="team team-blue">
+            <div class="team ${isClash ? 'team-blue' : ''}" style="${!isClash ? 'background-color: #16a34a;' : ''}">
                 <h2>${match.teamB} ${crownB}</h2>
                 <div class="score" id="scoreB-${match.id}">${match.scoreB}</div>
                 <div class="button-group">
-                    <button class="btn-blue" onclick="cambiar(${match.id}, 'scoreB', -1)">-</button>
-                    <button class="btn-blue" onclick="cambiar(${match.id}, 'scoreB', 1)">+</button>
+                    <button class="${isClash ? 'btn-blue' : 'btn-green'}" onclick="cambiar(${match.id}, 'scoreB', -1)">-</button>
+                    <button class="${isClash ? 'btn-blue' : 'btn-green'}" onclick="cambiar(${match.id}, 'scoreB', 1)">+</button>
                 </div>
             </div>
             <button class="delete-btn" onclick="eliminarEnfrentamiento(${match.id})">&times;</button>
         `;
-        matchesDiv.appendChild(div);
+        state.elements.matchesDiv.appendChild(div);
     });
     renderLeaderboard();
 }
 
 function recalculateScores() {
+    const state = gameStates[currentGame];
     const scores = {};
-    matchesData.forEach(match => {
-        // Acumulamos los puntos para cada jugador en todas las partidas
+    state.matchesData.forEach(match => {
         scores[match.teamA] = (scores[match.teamA] || 0) + match.scoreA;
         scores[match.teamB] = (scores[match.teamB] || 0) + match.scoreB;
     });
-    // Actualizamos el objeto global de puntuaciones
-    scoresData = scores;
+    state.scoresData = scores;
 }
 
 function renderLeaderboard() {
-    const leaderboardDiv = document.getElementById("tabla-ganadores");
+    const state = gameStates[currentGame];
 
-    // Ordenamos los jugadores por puntuación de mayor a menor
-    const sortedPlayers = Object.entries(scoresData)
+    const sortedPlayers = Object.entries(state.scoresData)
         .map(([player, points]) => ({ player, points }))
         .sort((a, b) => b.points - a.points);
 
-    // Renderizamos la tabla
+    const trophyGif = currentGame === 'clash' 
+        ? "https://media.tenor.com/oCQYaLar7_MAAAAM/fortnite-clash.gif"
+        : "https://media.tenor.com/3YHLRFmS-SYAAAAj/minecraft.gif";
+
     let content = `
         <h2>
-            <img src="https://media.tenor.com/oCQYaLar7_MAAAAM/fortnite-clash.gif" alt="trophy gif" style="width:50px; height:50px; margin-right: 10px;">
+            <img src="${trophyGif}" alt="trophy gif" style="width:50px; height:50px; margin-right: 10px;">
             Tabla de Puntos
         </h2>
     `;
@@ -207,8 +323,11 @@ function renderLeaderboard() {
                 <tbody>
                     ${sortedPlayers.map((player, index) => {
                         const topOneIcon = index === 0 
-                            ? `<img src="https://support.supercell.com/images/icon_CR_Parents_v1.png?v=1669362318" alt="Top 1" style="width: 24px; height: 24px; vertical-align: middle; margin-left: 5px;">` 
-                            : '';
+                            ? (currentGame === 'clash' 
+                                ? `<img src="https://store.supercell.com/_next/static/media/crown.4ca15365.png" alt="Top 1" style="width: 24px; height: 24px; vertical-align: middle; margin-left: 5px;">`
+                                : `<img src="https://png.pngtree.com/png-vector/20250515/ourmid/pngtree-retro-8-bit-crown-icon-with-transparent-background-vector-png-image_16290497.png" alt="Top 1" style="width: 24px; height: 24px; vertical-align: middle; margin-left: 5px; image-rendering: pixelated;">`
+                              ) : '';
+
                         return `<tr>
                                     <td>${index + 1}</td>
                                     <td>${escapeHtml(player.player)}${topOneIcon}</td>
@@ -219,7 +338,7 @@ function renderLeaderboard() {
             </table>
         `;
     }
-    leaderboardDiv.innerHTML = content;
+    state.elements.leaderboardDiv.innerHTML = content;
 }
 
 function escapeHtml(text) {
@@ -228,44 +347,65 @@ function escapeHtml(text) {
 }
 
 window.agregarEnfrentamiento = function() {
-    // Normalizamos los nombres: quitamos espacios y convertimos a minúsculas para el conteo.
-    // Luego, ponemos la primera letra en mayúscula para mostrarlo de forma consistente.
+    const state = gameStates[currentGame];
     const normalize = (name) => name.trim().toLowerCase().replace(/^\w/, (c) => c.toUpperCase());
 
-    const teamA = escapeHtml(normalize(document.getElementById("teamA").value));
-    const teamB = escapeHtml(normalize(document.getElementById("teamB").value));
+    const teamA = escapeHtml(normalize(state.elements.teamAInput.value));
+    const teamB = escapeHtml(normalize(state.elements.teamBInput.value));
     if (!teamA || !teamB) return alert("Debes poner los dos nombres.");
 
     const newMatch = { id: Date.now(), teamA, teamB, scoreA: 0, scoreB: 0 };
-    matchesData.push(newMatch);
-    document.getElementById("teamA").value = "";
-    document.getElementById("teamB").value = "";
-    // No es necesario recalcular aquí porque un nuevo match no tiene ganador
+    state.matchesData.push(newMatch);
+    state.elements.teamAInput.value = "";
+    state.elements.teamBInput.value = "";
+    
     renderMatches();
     guardarDatos();
 };
 
 window.cambiar = function(id, campo, valor) {
-    const match = matchesData.find(m => m.id === id);
+    const state = gameStates[currentGame];
+    const match = state.matchesData.find(m => m.id === id);
     if (match) {
         const nuevoValor = match[campo] + valor;
         if (nuevoValor >= 0) match[campo] = nuevoValor;
-        recalculateScores(); // Recalculamos las puntuaciones
+        recalculateScores();
         renderMatches();
         guardarDatos();
     }
 };
 
 window.eliminarEnfrentamiento = function(id) {
-    matchesData = matchesData.filter(m => m.id !== id);
-    recalculateScores(); // Recalculamos las puntuaciones
+    const state = gameStates[currentGame];
+    state.matchesData = state.matchesData.filter(m => m.id !== id);
+    recalculateScores();
     renderMatches();
     guardarDatos();
 };
 
-cargarDatos();
+window.switchGame = function(game) {
+    currentGame = game;
+    document.getElementById('clash-royale-section').style.display = game === 'clash' ? 'flex' : 'none';
+    document.getElementById('minecraft-section').style.display = game === 'minecraft' ? 'flex' : 'none';
+
+    document.getElementById('tabla-ganadores').style.display = game === 'clash' ? 'block' : 'none';
+    document.getElementById('mc-tabla-ganadores').style.display = game === 'minecraft' ? 'block' : 'none';
+
+    document.getElementById('show-clash').classList.toggle('active', game === 'clash');
+    document.getElementById('show-minecraft').classList.toggle('active', game === 'minecraft');
+
+    if (game === 'minecraft') {
+        document.body.style.background = 'linear-gradient(90deg, #16a34a 50%, #a16207 50%)';
+    } else {
+        document.body.style.background = 'linear-gradient(90deg, #1e3a8a 50%, #b91c1c 50%)';
+    }
+
+    cargarDatos();
+}
+
+// Carga inicial
+switchGame('clash');
 
 </script>
 </body>
 </html>
-
